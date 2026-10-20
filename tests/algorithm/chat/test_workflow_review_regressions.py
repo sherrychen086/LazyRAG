@@ -127,13 +127,13 @@ def test_execution_limits_remain_opt_in_for_every_workflow():
 
 def test_explicit_update_is_distinct_and_changes_generation_ratio(monkeypatch):
     from lazymind.chat.engine.subagent import context
-    module = load('image-workflow-v2', 'baoyu')
+    module = load('image-workflow-v2', 'media')
     params = {'launch_user_input': '生成16:9山谷海报', 'user_input': '生成16:9山谷海报', 'current_user_input': '改成9:16'}
     monkeypatch.setattr(context, 'require_context', lambda: SimpleNamespace(params=params))
     captured = {}
     monkeypatch.setattr(module, '_artifact_text', lambda key: 'mountain landscape 16:9')
     monkeypatch.setattr(module, '_artifact_image_refs', lambda *keys: [])
-    monkeypatch.setattr(module, 'baoyu_image_generator', lambda prompt, **kwargs: captured.update(kwargs) or {})
+    monkeypatch.setattr(module, '_generate_with_configured_model', lambda prompt, **kwargs: captured.update(kwargs) or {})
     monkeypatch.setattr(module, '_publish_generated_images', lambda *args: {})
     module.generate_ordinary_image()
     assert captured['aspect_ratio'] == '9:16'
@@ -143,35 +143,16 @@ def test_explicit_update_is_distinct_and_changes_generation_ratio(monkeypatch):
 
 
 def test_continue_retains_update_saved_in_bound_prompt(monkeypatch):
-    module = load('image-workflow-v2', 'baoyu')
+    module = load('image-workflow-v2', 'media')
     bound_request = effective_image_request({'launch_user_input': '生成16:9海报', 'current_user_input': '改成9:16'})
     monkeypatch.setattr(module, '_artifact_text', lambda key: bound_request)
     monkeypatch.setattr(module, '_immutable_request', lambda: '生成16:9海报')
     monkeypatch.setattr(module, '_artifact_image_refs', lambda *keys: [])
     captured = {}
-    monkeypatch.setattr(module, 'baoyu_image_generator', lambda prompt, **kwargs: captured.update(kwargs) or {})
+    monkeypatch.setattr(module, '_generate_with_configured_model', lambda prompt, **kwargs: captured.update(kwargs) or {})
     monkeypatch.setattr(module, '_publish_generated_images', lambda *args: {})
     module.generate_ordinary_image()
     assert captured['aspect_ratio'] == '9:16'
-
-
-@pytest.mark.parametrize('size', [(4000, 500), (500, 4000), (4000, 100)])
-def test_unrepresentable_source_ratio_fails_before_provider(tmp_path, size):
-    module = load('image-workflow-v2', 'baoyu')
-    source = tmp_path / 'wide.png'
-    Image.new('RGB', size).save(source)
-    with pytest.raises(ToolExecutionError, match='aspect ratio'):
-        module._size_for_source_image(str(source))
-
-
-@pytest.mark.parametrize('size', [(1600, 900), (900, 1600), (1000, 1000), (3000, 1000)])
-def test_supported_source_ratio_is_preserved(tmp_path, size):
-    module = load('image-workflow-v2', 'baoyu')
-    source = tmp_path / 'source.png'
-    Image.new('RGB', size).save(source)
-    width, height = map(int, module._size_for_source_image(str(source)).split('x'))
-    assert abs((width / height) / (size[0] / size[1]) - 1) < .01
-    assert 512 <= width <= 4096 and 512 <= height <= 4096 and width * height > 3_686_400
 
 
 def test_requested_search_references_are_retrieved_and_bound(monkeypatch):
@@ -281,7 +262,7 @@ def test_v2_loads_without_another_workflow_source_tree(monkeypatch, tmp_path):
     from lazymind.workflow_toolkit import load_workflow_package_tools
     import base64
     import yaml
-    files = {name: base64.b64encode((ROOT / 'workflows/image-workflow-v2' / name).read_bytes()).decode() for name in ['workflow.yaml', 'scripts/tools.py', 'scripts/baoyu.py']}
+    files = {name: base64.b64encode((ROOT / 'workflows/image-workflow-v2' / name).read_bytes()).decode() for name in ['workflow.yaml', 'scripts/tools.py', 'scripts/media.py']}
     monkeypatch.chdir(tmp_path)
     functions = [function for script in yaml.safe_load((ROOT / 'workflows/image-workflow-v2/workflow.yaml').read_text(encoding='utf-8'))['tool_scripts'] for function in script['functions']]
     loaded = load_workflow_package_tools({'files': files}, functions, 'image-workflow-v2', 'immutable-test')

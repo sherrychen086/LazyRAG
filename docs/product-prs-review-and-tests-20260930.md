@@ -112,7 +112,7 @@ gh pr create --repo LazyAGI/LazyMind --base main \
 有 Python 测试依赖的已有开发环境中，可分组运行以下命令。各组建议用独立进程，避免历史测试的模块替身污染后续测试；`python` 需指向安装了本仓库依赖的解释器。
 
 ```bash
-PYTHONPATH=algorithm:algorithm/lazyllm python -m pytest -q tests/algorithm/chat/test_workflow_review_regressions.py tests/algorithm/chat/test_image_workflow_v2_tools.py tests/algorithm/chat/test_image_workflow_v2_baoyu.py
+PYTHONPATH=algorithm:algorithm/lazyllm python -m pytest -q tests/algorithm/chat/test_workflow_review_regressions.py tests/algorithm/chat/test_image_workflow_v2_tools.py tests/algorithm/chat/test_image_workflow_v2_media.py
 PYTHONPATH=algorithm:algorithm/lazyllm python -m pytest -q tests/algorithm/chat/test_workflow_selection.py
 PYTHONPATH=algorithm:algorithm/lazyllm python -m pytest -q tests/algorithm/chat/test_writer_workflow_runtime.py tests/algorithm/chat/test_writer_plugin_draft_stream.py tests/algorithm/chat/test_writer_stream_recovery.py tests/algorithm/chat/test_writer_source_contract.py
 PYTHONPATH=algorithm:algorithm/lazyllm python -m pytest -q tests/algorithm/chat/workflows/test_product_solution_delivery.py tests/algorithm/chat/test_product_workflow_delivery_contract.py
@@ -128,7 +128,7 @@ node node_modules/vitest/vitest.mjs run src/modules/chat/components/WorkflowPane
 
 ## 测试：合入前必须执行的真实服务端测
 
-准备配置好 LLM、Seedream `ARK_API_KEY`、图片搜索及含品牌资料的知识库的开发实例；构建本分支并同步这三个工作流的新 revision。保留一份升级前 Writer 文档/会话用于恢复验证。记录每项 session、revision、操作步骤、前后文件和预期/实际结果。
+准备配置好 LLM、全局图片生成/编辑模型、图片搜索及含品牌资料的知识库的开发实例；构建本分支并同步这三个工作流的新 revision。无需设置工作流专用媒体环境变量。保留一份升级前 Writer 文档/会话用于恢复验证。记录每项 session、revision、操作步骤、前后文件和预期/实际结果。
 
 | 场景 | 操作 | 通过条件 |
 |---|---|---|

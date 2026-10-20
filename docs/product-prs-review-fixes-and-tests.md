@@ -444,7 +444,7 @@ python -m pytest -q tests/algorithm/test_workflow_sdk.py
 python -m pytest -q tests/algorithm/test_workflow_toolkit.py
 python -m pytest -q tests/algorithm/chat/test_workflow_full_trust.py
 python -m pytest -q tests/algorithm/chat/test_image_workflow_v2_tools.py
-python -m pytest -q tests/algorithm/chat/test_image_workflow_v2_baoyu.py
+python -m pytest -q tests/algorithm/chat/test_image_workflow_v2_media.py
 python -m pytest -q tests/algorithm/chat/workflows/test_image_workflow_v2_contract.py
 python -m pytest -q tests/algorithm/chat/workflows/test_image_workflow_meme_modes.py
 python -m pytest -q tests/algorithm/chat/workflows/test_image_workflow_search_validation.py
@@ -470,7 +470,7 @@ node node_modules/vite/bin/vite.js build
 
 ## 测试：合入前必须执行的真实服务端测
 
-准备配置好 LLM、Seedream `ARK_API_KEY`、图片搜索及含品牌资料的知识库的开发实例；构建本分支并同步这三个工作流的新 revision。保留一份升级前 Writer 文档/会话用于恢复验证。记录每项 session、revision、操作步骤、前后文件和预期/实际结果。
+准备配置好 LLM、全局图片生成/编辑模型、图片搜索及含品牌资料的知识库的开发实例；构建本分支并同步这三个工作流的新 revision。无需设置工作流专用媒体环境变量。保留一份升级前 Writer 文档/会话用于恢复验证。记录每项 session、revision、操作步骤、前后文件和预期/实际结果。
 
 | 场景 | 操作 | 通过条件 |
 |---|---|---|
