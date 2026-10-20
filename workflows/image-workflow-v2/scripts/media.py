@@ -36,6 +36,10 @@ _SUPPORTED_RATIO_RE = re.compile(
     r'1\s*[:：]\s*1)(?!\d)',
     re.IGNORECASE,
 )
+_ASPECT_RATIO_WORD_RE = re.compile(
+    r'竖版|竖向|纵向|portrait|vertical|横版|横向|宽屏|landscape|widescreen|方图|正方形|square',
+    re.IGNORECASE,
+)
 
 _SOURCE_SIZE_TARGET_PIXELS = 1024 * 1024
 _SOURCE_SIZE_MIN_EDGE = 512
@@ -256,11 +260,14 @@ def _artifact_image_refs(*keys: str) -> List[str]:
     return refs
 
 
+def _has_explicit_aspect_ratio(request: str) -> bool:
+    text = str(request or '')
+    return bool(_SUPPORTED_RATIO_RE.search(text) or _ASPECT_RATIO_WORD_RE.search(text))
+
+
 def _requested_aspect_ratio(request: str) -> str:
     update = str(request or '').rpartition('User update (overrides conflicting launch requirements):\n')[2]
-    if update and (_SUPPORTED_RATIO_RE.search(update) or re.search(
-        r'竖版|竖向|纵向|portrait|vertical|横版|横向|宽屏|landscape|widescreen|方图|正方形|square', update, re.I,
-    )):
+    if update and _has_explicit_aspect_ratio(update):
         request = update
     matches = list(_SUPPORTED_RATIO_RE.finditer(str(request or '')))
     match = matches[-1] if matches else None
@@ -371,7 +378,7 @@ def generate_edit_candidate() -> Dict[str, Any]:
     if update:
         prompt += '\nCurrent user requirements (preserve everything else):\n' + update
         request += '\nUser update (overrides conflicting launch requirements):\n' + update
-    explicit_ratio = _SUPPORTED_RATIO_RE.search(request)
+    explicit_ratio = _has_explicit_aspect_ratio(request)
     aspect_ratio = _requested_aspect_ratio(request) if explicit_ratio else None
     result = _edit_with_configured_model(
         prompt,
