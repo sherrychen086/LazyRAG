@@ -82,6 +82,7 @@ def _client() -> WorkflowClient:
         transport=httpx,
         trace_context=lazyllm.get_trace_context,
         enable_tool_retrieval=bool(cfg.get('enable_tool_retrieval')),
+        thinking_depth=str(cfg.get('thinking_depth') or 'medium'),
     )
 
 
