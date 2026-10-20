@@ -287,12 +287,16 @@ def publish_edit_contract(requested_edit: str, edit_scope: str, preserve: str,
         refs = [source_url]
     if len(refs) != 1:
         raise ToolExecutionError('Local editing requires exactly one source image.')
-    validation = _legacy_image_tools().inspect_image_reference(refs[0])
-    if validation.get('status') != 'ok':
-        raise ToolExecutionError(f'Invalid source image: {validation.get("reason", "validation failed")}')
     paths = _resolve_source_image_paths(refs)
     if len(paths) != 1 or not Path(paths[0]).is_file():
         raise ToolExecutionError('The exact source image could not be resolved.')
+    # Workflow bindings may arrive as a signed static URL or slot reference.
+    # Resolve/stage that binding first, then inspect the complete local file.
+    # Probing the transport reference can observe a range response or an input
+    # while it is still being staged and incorrectly report Truncated File Read.
+    validation = _legacy_image_tools().inspect_image_reference(paths[0])
+    if validation.get('status') != 'ok':
+        raise ToolExecutionError(f'Invalid source image: {validation.get("reason", "validation failed")}')
     from lazymind.chat.engine.subagent.context import require_context
 
     contract['user_request'] = effective_image_request(require_context().params)

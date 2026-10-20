@@ -53,6 +53,25 @@ def test_uploaded_edit_publishes_exact_bound_source_and_contract(image_context, 
     assert next(e for e in events if e['slot'] == 'edit_contract')['value']['data']['requested_edit'] == '帽子变蓝'
 
 
+def test_uploaded_edit_validates_resolved_local_source(image_context, tmp_path, monkeypatch):
+    module = load('image-workflow-v2', 'tools')
+    ctx, _ = image_context
+    source = tmp_path / 'resolved.png'
+    Image.new('RGB', (800, 600), 'blue').save(source)
+    ctx.params['remote_inputs']['source_image'] = 'signed-or-staged-transport-ref'
+    inspected = []
+
+    monkeypatch.setattr(module, '_resolve_source_image_paths', lambda refs: [str(source)])
+    monkeypatch.setattr(module, '_legacy_image_tools', lambda: SimpleNamespace(
+        inspect_image_reference=lambda value: inspected.append(value) or {'status': 'ok'},
+    ))
+
+    result = module.publish_edit_contract('天空变紫', '天空', '其他内容', '不要改变画幅')
+
+    assert result['status'] == 'ok'
+    assert inspected == [str(source)]
+
+
 def test_invalid_edit_contract_does_not_publish_partial_outputs(image_context):
     module = load('image-workflow-v2', 'tools')
     with pytest.raises(ToolExecutionError):
